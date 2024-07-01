@@ -11,7 +11,7 @@ const badges: { threshold: number; icon: Icon }[] = [
 // I decided to ditch the null and facilitate all returns in the enum, also introduced a badges configuration for easy adding of future badges.
 // Since null is not allowed in enums, this seemed smother.
 // In a bigger application I would check if this causes any problems/goes against commited code conventions.
-export const getUsersBadge = (user: User): Icon => {
+export const getUsersBadge = async (user: User): Promise<Icon> => {
   for (const { threshold, icon } of badges) {
     if (user.solutionCount >= threshold) {
       return icon;
