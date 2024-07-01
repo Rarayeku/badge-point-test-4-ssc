@@ -1,6 +1,7 @@
 import { User } from './types/user.interface';
 import { Icon } from './types/icon.enum';
 import { getAllUser as getAllUsers } from './user-store';
+import { emulateLongProcess } from './emulate-long-process';
 
 const badges: { threshold: number; icon: Icon }[] = [
   { threshold: 2000, icon: Icon.BADGE_GODLIKE },
@@ -13,6 +14,8 @@ const badges: { threshold: number; icon: Icon }[] = [
 
 
 export const getUsersBadge = async (user: User): Promise<Icon> => {
+  await emulateLongProcess();
+
   if (user.solutionCount < 0) {
     return Icon.BADGE_BADASS;
   }
@@ -26,6 +29,8 @@ export const getUsersBadge = async (user: User): Promise<Icon> => {
 
 async function calculateUsersStatistics() {
   const users = await getAllUsers();
+  const getUserBadgePromises = users.map(user => getUsersBadge(user));
+  const badges = await Promise.all(getUserBadgePromises);
   const badgeCounts: { [key in Icon]: number } = {
     [Icon.BADGE_GODLIKE]: 0,
     [Icon.BADGE_PLATINUM]: 0,
@@ -37,22 +42,22 @@ async function calculateUsersStatistics() {
     [Icon.DEFAULT]: 0,
   };
 
-  const getUserBadgePromises = users.map(async user => {
-    const badge = await getUsersBadge(user);
+  badges.forEach(badge => {
     badgeCounts[badge]++;
-    return { ...user, badge };
   });
 
-  const usersWithBadge = await Promise.all(getUserBadgePromises);
   const usersTotal = users.length;
   const solutionsTotal = users.reduce((sum, user) => sum + user.solutionCount, 0);
   const averageSolutions = solutionsTotal / usersTotal;
+  const usersWithBadge = users.map((user, index) => ({
+    ...user,
+    badge: badges[index],
+  }));
   const usersTopFive = usersWithBadge.sort((a, b) => b.solutionCount - a.solutionCount).slice(0, 5);
   const badgeTopOne = Object.keys(badgeCounts).reduce((a, b) =>
     badgeCounts[a as Icon] > badgeCounts[b as Icon] ? a : b
   ) as Icon;
 
-  // Print statistics to console
   console.log('Statistics:');
   console.log(`1. Total number of users: ${usersTotal}`);
   console.log(`2. Average solution count: ${averageSolutions.toFixed(2)}`);
@@ -64,3 +69,13 @@ async function calculateUsersStatistics() {
 }
 
 calculateUsersStatistics().catch(console.error);
+
+
+//How does that impact the rest of the source code?
+/*  Imho the biggest risk is stuffing the main thread excessively.
+    This could lead to perfomance impacts or even break timeout threshholds.
+    Refactored to a more batch processing-like approach.
+    Promise.all should already parallelize the calls instead of sequentially for each user.
+    I also thought of maybe tweaking badge calculation further 
+    by returning a default badge early and calculate after fetching all users, but imo this is rather situational
+*/
