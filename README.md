@@ -16,7 +16,7 @@ Please make the function `getUsersBadge` async.
 
 There are new Badges! Please implement the following Badges:
 ```
-> 1 starter  
+> 1 starter
 > 100 platinum  
 > 2000 god like  
 < 0 bad ass  
