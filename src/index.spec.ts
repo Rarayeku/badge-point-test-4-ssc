@@ -23,9 +23,9 @@ describe('getUsersBadge', () => {
   });
 
   it(`get no Icon`, function () {
-    expect(getUsersBadge(getUserMock(4))).toEqual(null);
-    expect(getUsersBadge(getUserMock(-100))).toEqual(null);
-    expect(getUsersBadge(getUserMock(0))).toEqual(null);
+    expect(getUsersBadge(getUserMock(4))).toEqual(Icon.DEFAULT);
+    expect(getUsersBadge(getUserMock(-100))).toEqual(Icon.DEFAULT);
+    expect(getUsersBadge(getUserMock(0))).toEqual(Icon.DEFAULT);
   });
 
 });
